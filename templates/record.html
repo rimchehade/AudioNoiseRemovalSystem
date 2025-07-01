@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Record Audio</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+    
+        h2 {
+            color: #333;
+        }
+    
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s;
+        }
+    
+        button:hover {
+            background-color: #0056b3;
+        }
+    
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h2>Record Your Audio</h2>
+    <button id="startBtn">Start Recording</button>
+    <button id="stopBtn" disabled>Stop Recording</button>
+    <p id="status">Not recording</p>
+    <audio id="preview" controls style="margin-top: 20px; display: none;"></audio>
+
+    <script src="{{ url_for('static', filename='recorder.js') }}"></script>
+    <script>
+        let audioContext = new AudioContext({ sampleRate: 16000 });
+        let recorder;
+
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            let input = audioContext.createMediaStreamSource(stream);
+            recorder = new Recorder(input);
+        }).catch(() => {
+            alert("Microphone access denied.");
+        });
+
+        const startBtn = document.getElementById("startBtn");
+        const stopBtn = document.getElementById("stopBtn");
+        const status = document.getElementById("status");
+
+        startBtn.onclick = () => {
+            if (recorder) {
+                recorder.record();
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                status.innerText = "Recording...";
+            }
+        };
+
+        stopBtn.onclick = () => {
+            if (recorder) {
+                recorder.stop();
+                recorder.exportWAV(blob => {
+                    const audioURL = URL.createObjectURL(blob);
+                    const preview = document.getElementById("preview");
+                    preview.src = audioURL;
+                    preview.style.display = "block"; 
+
+                    const enhanceBtn = document.createElement("button");
+                    enhanceBtn.innerText = "Enhance Audio";
+                    enhanceBtn.style.marginTop = "20px";
+                    document.body.appendChild(enhanceBtn);
+
+                    enhanceBtn.onclick = () => {
+                        status.innerText = "Enhancing...";
+
+                        const formData = new FormData();
+                        formData.append("file", blob, "recorded_audio.wav");
+
+                        fetch("/record", {
+                            method: "POST",
+                            body: formData,
+                        })
+                        .then(res => res.text())
+                        .then(html => {
+                            document.open();
+                            document.write(html);
+                            document.close();
+                        })
+                        .catch(() => alert("Upload failed. Try again."));
+                    };
+                });
+                recorder.clear();
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                status.innerText = "Recording stopped. Preview your audio below.";
+            }
+        };
+    </script>
+</body>
+</html>
