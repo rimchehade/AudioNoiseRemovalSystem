@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Download Enhanced Audio</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h2>Enhancement Complete 🎉</h2>
+    <p>Listen to both versions below:</p>
+
+    <h3>Original</h3>
+    <audio controls>
+    <source src="{{ url_for('static', filename='uploads/' + original_filename) }}" type="audio/wav">
+    </audio>
+
+    <h3>Enhanced</h3>
+    <audio controls>
+    <source src="{{ url_for('static', filename='outputs/' + filename) }}" type="audio/wav">
+    </audio>
+
+    <br><br>
+    <a href="{{ url_for('download_file', filename=filename) }}" download>
+    <button>Download Enhanced Audio</button>
+    </a>
+    <a href="{{ url_for('upload_file') }}">
+    <button style="margin-top: 10px; background-color: grey;">Upload Another File</button>
+    </a>
+</body>
+</html>

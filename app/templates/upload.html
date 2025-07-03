@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audio Noise Removal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .upload-box {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        input[type="file"] {
+            margin-top: 15px;
+        }
+
+        input[type="submit"] {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        #progressContainer {
+            margin-top: 25px;
+            display: none;
+        }
+
+        #progressBarOuter {
+            width: 100%;
+            background: #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #progressBar {
+            width: 0%;
+            background: #28a745;
+            height: 20px;
+            transition: width 0.3s;
+        }
+
+        #progressText {
+            margin-top: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-box">
+        <h1>Upload Noisy Audio</h1>
+        <p>Supported formats: WAV, MP3</p>
+        <form id="uploadForm" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".wav,.mp3" required><br>
+            <input type="submit" value="Upload and Enhance">
+
+            <!-- Progress Bar -->
+            <div id="progressContainer">
+                <div id="progressBarOuter">
+                    <div id="progressBar"></div>
+                </div>
+                <p id="progressText">Uploading... 0%</p>
+            </div>
+        </form>
+        <p><a href="/record">Or record a new audio</a></p>
+    </div>
+
+    <script>
+        const form = document.getElementById("uploadForm");
+        const progressBar = document.getElementById("progressBar");
+        const progressText = document.getElementById("progressText");
+        const progressContainer = document.getElementById("progressContainer");
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            const fileInput = form.querySelector('input[type="file"]');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            progressContainer.style.display = "block";
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/", true);
+
+            xhr.upload.onprogress = function (e) {
+                if (e.lengthComputable) {
+                    let percent = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percent + "%";
+                    progressText.innerText = `Uploading... ${percent}%`;
+                }
+            };
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    document.open();
+                    document.write(xhr.responseText);
+                    document.close();
+                } else {
+                    alert("Upload failed. Please try again.");
+                }
+            };
+
+            xhr.send(formData);
+        });
+    </script>
+</body>
+</html>
